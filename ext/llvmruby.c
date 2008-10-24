@@ -3,6 +3,7 @@
 VALUE cLLVMRuby = Qnil;
 VALUE cLLVMValue = Qnil;
 VALUE cLLVMUser = Qnil;
+VALUE cLLVMUse = Qnil;
 VALUE cLLVMModule = Qnil;
 VALUE cLLVMFunction = Qnil;
 VALUE cLLVMBasicBlock = Qnil;
@@ -125,6 +126,13 @@ VALUE llvm_value_num_uses(VALUE);
 VALUE llvm_value_used_in_basic_block(VALUE, VALUE);
 VALUE llvm_value_replace_all_uses_with(VALUE, VALUE);
 
+VALUE llvm_user_get_operand_list(VALUE);
+VALUE llvm_user_get_num_operands(VALUE);
+VALUE llvm_user_get_operand(VALUE, VALUE);
+VALUE llvm_user_set_operand(VALUE, VALUE, VALUE);
+VALUE llvm_user_drop_all_references(VALUE);
+VALUE llvm_user_replace_uses_of_with(VALUE, VALUE, VALUE);
+
 VALUE llvm_phi_add_incoming(VALUE, VALUE, VALUE);
 
 VALUE llvm_pass_manager_allocate(VALUE);
@@ -146,6 +154,7 @@ void Init_llvmruby() {
 
   cLLVMValue = rb_define_class_under(cLLVMRuby, "Value", rb_cObject);
   cLLVMUser = rb_define_class_under(cLLVMRuby, "User", cLLVMValue);
+  cLLVMUse = rb_define_class_under(cLLVMRuby, "Use", rb_cObject);
   cLLVMModule = rb_define_class_under(cLLVMRuby, "Module", rb_cObject);
   cLLVMFunction = rb_define_class_under(cLLVMRuby, "Function", rb_cObject);
   cLLVMBasicBlock = rb_define_class_under(cLLVMRuby, "BasicBlock", cLLVMValue);   
@@ -193,6 +202,14 @@ void Init_llvmruby() {
   rb_define_method(cLLVMValue, "num_uses", llvm_value_num_uses, 0);
   rb_define_method(cLLVMValue, "used_in_basic_block?", llvm_value_used_in_basic_block, 1);
   rb_define_method(cLLVMValue, "replace_all_uses_with", llvm_value_replace_all_uses_with, 1);
+
+  rb_define_method(cLLVMUser, "get_operand_list", llvm_user_get_operand_list, 0);
+  rb_define_method(cLLVMUser, "get_num_operands", llvm_user_get_num_operands, 0);
+  rb_define_method(cLLVMUser, "get_operand", llvm_user_get_operand, 1);
+  rb_define_method(cLLVMUser, "set_operand", llvm_user_set_operand, 2);
+  rb_define_method(cLLVMUser, "drop_all_references", llvm_user_drop_all_references, 0);
+  rb_define_method(cLLVMUser, "replace_uses_of_with", llvm_user_replace_uses_of_with, 2);
+
 
   init_instructions();
 
