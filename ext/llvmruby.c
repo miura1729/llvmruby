@@ -2,6 +2,7 @@
 
 VALUE cLLVMRuby = Qnil;
 VALUE cLLVMValue = Qnil;
+VALUE cLLVMUser = Qnil;
 VALUE cLLVMModule = Qnil;
 VALUE cLLVMFunction = Qnil;
 VALUE cLLVMBasicBlock = Qnil;
@@ -144,12 +145,13 @@ void Init_llvmruby() {
   cLLVMFunctionType = rb_define_class_under(cLLVMRuby, "FunctionType", cLLVMType);
 
   cLLVMValue = rb_define_class_under(cLLVMRuby, "Value", rb_cObject);
+  cLLVMUser = rb_define_class_under(cLLVMRuby, "User", cLLVMValue);
   cLLVMModule = rb_define_class_under(cLLVMRuby, "Module", rb_cObject);
   cLLVMFunction = rb_define_class_under(cLLVMRuby, "Function", rb_cObject);
   cLLVMBasicBlock = rb_define_class_under(cLLVMRuby, "BasicBlock", cLLVMValue);   
   cLLVMBuilder = rb_define_class_under(cLLVMRuby, "Builder", rb_cObject);
 
-  cLLVMInstruction = rb_define_class_under(cLLVMRuby, "Instruction", cLLVMValue);
+  cLLVMInstruction = rb_define_class_under(cLLVMRuby, "Instruction", cLLVMUser);
   cLLVMUnaryInstruction = rb_define_class_under(cLLVMRuby, "UnaryInstruction", cLLVMInstruction);
   cLLVMBinaryOperator = rb_define_class_under(cLLVMRuby, "BinaryOperator", cLLVMInstruction);
   cLLVMTerminatorInst = rb_define_class_under(cLLVMRuby, "TerminatorInst", cLLVMInstruction);
