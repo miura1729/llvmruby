@@ -3,6 +3,7 @@
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/System/DynamicLibrary.h"
 #include <fstream>
 #include <sstream>
 
@@ -94,6 +95,14 @@ VALUE
 llvm_execution_engine_get(VALUE klass, VALUE module) {
   CHECK_TYPE(module, cLLVMModule);
 
+#if defined(__CYGWIN__)
+
+  // Load dll Modules for ruby
+  sys::DynamicLibrary::LoadLibraryPermanently("cygwin1.dll");
+  sys::DynamicLibrary::LoadLibraryPermanently("cygruby190.dll");
+
+#endif
+
   Module *m = LLVM_MODULE(module);
   ExistingModuleProvider *MP = new ExistingModuleProvider(m);
 
@@ -139,7 +148,12 @@ VALUE
 llvm_module_read_bitcode(VALUE self, VALUE bitcode) {
   Check_Type(bitcode, T_STRING);
 
+#if defined(RSTRING_PTR)
+  MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING_PTR(bitcode),RSTRING_PTR(bitcode)+RSTRING_LEN(bitcode));  
+#else
   MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING(bitcode)->ptr,RSTRING(bitcode)->ptr+RSTRING(bitcode)->len);
+#endif
+
   Module *module = ParseBitcodeFile(buf);
   delete buf;
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);
