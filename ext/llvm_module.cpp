@@ -28,7 +28,16 @@ llvm_module_get_or_insert_function(VALUE self, VALUE name, VALUE rtype) {
 
   Module *m = LLVM_MODULE(self);
   FunctionType *type = LLVM_FUNC_TYPE(rtype);
-  Function *f = cast<Function>(m->getOrInsertFunction(StringValuePtr(name), type));
+  Constant *fn = m->getOrInsertFunction(StringValuePtr(name), type);
+
+#if defined(USE_ASSERT_CHECK)
+  if (isa<Function>(fn) == 0) {
+    rb_raise(rb_eRuntimeError, 
+	     "cast<Function>(fn) argument of incompatible type !");
+  }
+#endif
+
+  Function *f = cast<Function>(fn);
   return llvm_function_wrap(f); 
 }
 

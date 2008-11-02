@@ -58,6 +58,9 @@ extern VALUE cLLVMPassManager;
     rb_raise(rb_eTypeError, "wrong argument type: %s given, expected %s", rb_obj_classname(val), rb_class2name(klass));\
   }
 
+
+#define USE_ASSERT_CHECK
+
 extern "C" {
 VALUE llvm_value_wrap(Value*);
 VALUE llvm_function_wrap(Function*);

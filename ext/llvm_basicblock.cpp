@@ -107,6 +107,11 @@ llvm_builder_cond_br(VALUE self, VALUE rcond, VALUE rtrue_block, VALUE rfalse_bl
   BasicBlock *true_block, *false_block;
   Data_Get_Struct(rtrue_block, BasicBlock, true_block);
   Data_Get_Struct(rfalse_block, BasicBlock, false_block);
+#if defined(USE_ASSERT_CHECK)
+  if (cond->getType() != Type::Int1Ty) {
+    rb_raise(rb_eRuntimeError, "May only branch on boolean predicates!");
+  }
+#endif
 
   Value *branch_instr = builder->CreateCondBr(cond, true_block, false_block);
   return Data_Wrap_Struct(cLLVMBranchInst, NULL, NULL, branch_instr);
@@ -255,8 +260,31 @@ llvm_builder_call(int argc, VALUE* argv, VALUE self) {
   Function *callee = LLVM_FUNCTION(argv[0]);
   int num_args = argc-1;
   Value** args = (Value**)alloca(num_args*sizeof(Value*));
+
+#if defined(USE_ASSERT_CHECK)
+  const FunctionType *FTy =
+    cast<FunctionType>(cast<PointerType>(callee->getType())->getElementType());
+  char message[255];
+  if (!((unsigned)num_args == FTy->getNumParams() ||
+	(FTy->isVarArg() && (unsigned) num_args > FTy->getNumParams()))) {
+    snprintf(message, 255, 
+	     "Calling a function with bad signature number of argument %d expect %d", 
+	     num_args, FTy->getNumParams());
+    rb_raise(rb_eRuntimeError, message);
+  }
+#endif
+
   for(int i = 0; i < num_args; ++i) {
     args[i] = LLVM_VAL(argv[i+1]); 
+
+#if defined(USE_ASSERT_CHECK)
+    if (FTy->getParamType(i) != args[i]->getType()) {
+      snprintf(message, 255, 
+	       "Calling a function with a bad signature in %d argument", 
+	       i);
+      rb_raise(rb_eRuntimeError, message);
+    }
+#endif
   }
   return llvm_value_wrap(builder->CreateCall(callee, args, args+num_args));
 }
