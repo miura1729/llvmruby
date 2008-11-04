@@ -164,22 +164,30 @@ llvm_builder_alloca(VALUE self, VALUE rtype, VALUE rsize) {
 }
 
 VALUE
-llvm_builder_load(VALUE self, VALUE rptr) {
+llvm_builder_load(int argc, VALUE *argv, VALUE self) {
   DATA_GET_BUILDER
-
+  VALUE rptr;
+  VALUE isVolatile;
   Value *ptr;
+
+  rb_scan_args(argc, argv, "11", &rptr, &isVolatile);
   Data_Get_Struct(rptr, Value, ptr);
-  return Data_Wrap_Struct(cLLVMLoadInst, NULL, NULL, builder->CreateLoad(ptr));
+  return Data_Wrap_Struct(cLLVMLoadInst, NULL, NULL, builder->CreateLoad(ptr, RTEST(isVolatile)));
 }
 
 VALUE
-llvm_builder_store(VALUE self, VALUE rv, VALUE rptr) {
+llvm_builder_store(int argc, VALUE *argv, VALUE self) {
   DATA_GET_BUILDER
 
   Value *v, *ptr;
+  VALUE rv;
+  VALUE rptr;
+  VALUE isVolatile;
+
+  rb_scan_args(argc, argv, "21", &rv, &rptr, &isVolatile);
   Data_Get_Struct(rv, Value, v);
   Data_Get_Struct(rptr, Value, ptr);
-  return Data_Wrap_Struct(cLLVMStoreInst, NULL, NULL, builder->CreateStore(v, ptr));
+  return Data_Wrap_Struct(cLLVMStoreInst, NULL, NULL, builder->CreateStore(v, ptr, RTEST(isVolatile)));
 }
 
 VALUE

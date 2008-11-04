@@ -250,8 +250,8 @@ void Init_llvmruby() {
   rb_define_method(cLLVMBuilder, "malloc", llvm_builder_malloc, 2);
   rb_define_method(cLLVMBuilder, "free", llvm_builder_free, 1);
   rb_define_method(cLLVMBuilder, "alloca", llvm_builder_alloca, 2);
-  rb_define_method(cLLVMBuilder, "load", llvm_builder_load, 1);
-  rb_define_method(cLLVMBuilder, "store", llvm_builder_store, 2);
+  rb_define_method(cLLVMBuilder, "load", llvm_builder_load, -1);
+  rb_define_method(cLLVMBuilder, "store", llvm_builder_store, -1);
   rb_define_method(cLLVMBuilder, "icmp", llvm_builder_icmp, 3);
   rb_define_method(cLLVMBuilder, "fcmp", llvm_builder_fcmp, 3);
 
