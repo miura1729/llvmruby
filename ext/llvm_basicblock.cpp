@@ -132,6 +132,32 @@ llvm_builder_switch(VALUE self, VALUE rv, VALUE rdefault) {
 }
 
 VALUE
+llvm_builder_invoke(int argc, VALUE *argv, VALUE self) {
+  DATA_GET_BUILDER
+  if(argc < 3) { rb_raise(rb_eArgError, "Expected at least three argument"); }
+  int num_args = argc - 3;
+
+  Value *callee = LLVM_VAL(argv[0]);
+  BasicBlock *ndest;
+  BasicBlock *udest;
+  std::vector<Value *> vecarg(num_args);
+
+  Data_Get_Struct(argv[1], BasicBlock, ndest);
+  Data_Get_Struct(argv[2], BasicBlock, udest);
+  for (int i = 0; i < num_args; i++) {
+    vecarg[i] = LLVM_VAL(argv[i + 3]);
+  }
+  
+  return llvm_value_wrap(builder->CreateInvoke(callee, ndest, udest, vecarg.begin(), vecarg.end()));
+}
+
+VALUE
+llvm_builder_unwind(VALUE self) {
+  DATA_GET_BUILDER
+  return llvm_value_wrap(builder->CreateUnwind());
+}
+
+VALUE
 llvm_builder_malloc(VALUE self, VALUE rtype, VALUE rsize) {
   DATA_GET_BUILDER
 

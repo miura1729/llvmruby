@@ -328,4 +328,26 @@ class BasicTests < Test::Unit::TestCase
     m = LLVM::Module.new('test')
     assert PassManager.new.run(m)
   end
+
+  def test_invoke_unwind
+    m = LLVM::Module.new("test_module")
+    type = Type::function(MACHINE_WORD, [])
+    f2 = m.get_or_insert_function("test2", type)
+    b = f2.create_block.builder
+    b.return 1.llvm
+
+    type = Type::function(MACHINE_WORD, [])
+    f = m.get_or_insert_function("test", type)
+    b = f.create_block.builder
+    nd = f.create_block
+    ud = f.create_block
+    b.invoke(f2, nd, ud)
+    b.set_insert_point(ud)
+    b.return(3.llvm)
+    b.set_insert_point(nd)
+    b.return(1.llvm)
+    p f
+    ExecutionEngine.get(m)
+    assert_equal(0, ExecutionEngine.run_function(f))
+  end
 end

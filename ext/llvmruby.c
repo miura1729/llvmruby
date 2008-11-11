@@ -94,12 +94,14 @@ VALUE llvm_builder_return(VALUE, VALUE);
 VALUE llvm_builder_br(VALUE, VALUE);
 VALUE llvm_builder_cond_br(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_switch(VALUE, VALUE, VALUE);
+VALUE llvm_builder_invoke(int, VALUE *, VALUE);
+VALUE llvm_builder_unwind(VALUE, VALUE, VALUE);
 
 VALUE llvm_builder_malloc(VALUE, VALUE, VALUE);
 VALUE llvm_builder_free(VALUE, VALUE);
 VALUE llvm_builder_alloca(VALUE, VALUE, VALUE);
-VALUE llvm_builder_load(VALUE, VALUE);
-VALUE llvm_builder_store(VALUE, VALUE, VALUE);
+VALUE llvm_builder_load(int, VALUE *,  VALUE);
+VALUE llvm_builder_store(int, VALUE *, VALUE);
 VALUE llvm_builder_icmp(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_fcmp(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_gep(VALUE, VALUE, VALUE);
@@ -247,6 +249,8 @@ void Init_llvmruby() {
   rb_define_method(cLLVMBuilder, "br", llvm_builder_br, 1);
   rb_define_method(cLLVMBuilder, "cond_br", llvm_builder_cond_br, 3);
   rb_define_method(cLLVMBuilder, "switch", llvm_builder_switch, 2);
+  rb_define_method(cLLVMBuilder, "invoke", llvm_builder_invoke, -1);
+  rb_define_method(cLLVMBuilder, "unwind", llvm_builder_unwind, 0);
   rb_define_method(cLLVMBuilder, "malloc", llvm_builder_malloc, 2);
   rb_define_method(cLLVMBuilder, "free", llvm_builder_free, 1);
   rb_define_method(cLLVMBuilder, "alloca", llvm_builder_alloca, 2);
