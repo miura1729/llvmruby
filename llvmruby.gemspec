@@ -1,17 +1,19 @@
 spec = Gem::Specification.new do |s|
     s.platform      = Gem::Platform::RUBY
     s.name          = "llvmruby"
-    s.version       = "0.0.2" # Can't require version file on Github
+    s.version       = "0.0.3" # Can't require version file on Github
     s.summary       = "Ruby bindings to LLVM"
-    s.authors       = [ "Thomas Bagby" ]
-    s.email         = [ "tomatobagby@gmail.com" ]
+    s.authors       = [ "Thomas Bagby", "Christian Plessl" ]
+    s.email         = [ "tomatobagby@gmail.com", "christian@plesslweb.ch" ]
     s.files         = [ 
       "README", "COPYING", "Rakefile",
       "lib/llvm.rb", "lib/ruby_vm.rb", "lib/version.rb",
       "ext/llvm_basicblock.cpp",
       "ext/llvm_function.cpp",
       "ext/llvm_instruction.cpp",
-      "ext/llvm_module.cpp", 
+      "ext/llvm_module.cpp",
+      "ext/llvm_use.cpp",
+      "ext/llvm_user.cpp",
       "ext/llvm_value.cpp",
       "ext/llvmruby.c",
       "ext/llvmruby.h",
@@ -21,6 +23,8 @@ spec = Gem::Specification.new do |s|
       "test/test_instructions.rb",
       "test/test_read_bitcode.rb",
       "test/test_ruby_vm.rb",
+      "test/test_user.rb",
+      "test/test_value.rb",
       "test/byteswap.bc",
       "test/static.o"
     ]
@@ -32,6 +36,8 @@ spec = Gem::Specification.new do |s|
       "test/test_instructions.rb",
       "test/test_read_bitcode.rb",
       "test/test_ruby_vm.rb",
+      "test/test_user.rb",
+      "test/test_value.rb"
     ]
 
     s.has_rdoc      = true
