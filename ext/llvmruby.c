@@ -129,6 +129,14 @@ VALUE llvm_value_num_uses(VALUE);
 VALUE llvm_value_used_in_basic_block(VALUE, VALUE);
 VALUE llvm_value_replace_all_uses_with(VALUE, VALUE);
 
+VALUE llvm_value_is_constant(VALUE self);
+VALUE llvm_value_is_int_constant(VALUE self);
+VALUE llvm_value_is_float_constant(VALUE self);
+VALUE llvm_value_get_int_constant_value(VALUE self);
+VALUE llvm_value_get_float_constant_value(VALUE self);
+VALUE llvm_value_is_null(VALUE self);
+VALUE llvm_value_is_undef(VALUE self);
+
 VALUE llvm_user_get_operand_list(VALUE);
 VALUE llvm_user_get_num_operands(VALUE);
 VALUE llvm_user_get_operand(VALUE, VALUE);
@@ -208,6 +216,14 @@ void Init_llvmruby() {
   rb_define_method(cLLVMValue, "num_uses", llvm_value_num_uses, 0);
   rb_define_method(cLLVMValue, "used_in_basic_block?", llvm_value_used_in_basic_block, 1);
   rb_define_method(cLLVMValue, "replace_all_uses_with", llvm_value_replace_all_uses_with, 1);
+
+  rb_define_method(cLLVMValue, "is_constant", llvm_value_is_constant, 0);
+  rb_define_method(cLLVMValue, "is_int_constant", llvm_value_is_int_constant, 0);
+  rb_define_method(cLLVMValue, "is_float_constant", llvm_value_is_float_constant, 0);
+  rb_define_method(cLLVMValue, "get_int_constant_value", llvm_value_get_int_constant_value, 0);
+  rb_define_method(cLLVMValue, "get_float_constant_value", llvm_value_get_float_constant_value, 0);
+  rb_define_method(cLLVMValue, "is_null", llvm_value_is_null, 0);
+  rb_define_method(cLLVMValue, "is_undef", llvm_value_is_undef, 0);
 
   rb_define_method(cLLVMUser, "get_operand_list", llvm_user_get_operand_list, 0);
   rb_define_method(cLLVMUser, "get_num_operands", llvm_user_get_num_operands, 0);

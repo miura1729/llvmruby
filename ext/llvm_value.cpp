@@ -101,6 +101,68 @@ llvm_value_get_immediate_constant(VALUE self, VALUE v) {
   return llvm_value_wrap(ConstantInt::get(type, (long)v));
 }
 
+VALUE
+llvm_value_is_constant(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<Constant>(v) ? Qtrue : Qfalse;
+}
+
+VALUE
+llvm_value_is_int_constant(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<ConstantInt>(v) ? Qtrue : Qfalse;
+}
+
+VALUE
+llvm_value_is_float_constant(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<ConstantFP>(v) ? Qtrue : Qfalse;
+}
+
+VALUE
+llvm_value_get_int_constant_value(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  if (ConstantInt *C = dyn_cast<ConstantInt>(v)) {
+    APInt val = C->getValue();
+    return LL2NUM(val.getLimitedValue());
+  } else {
+    rb_raise(rb_eTypeError, "Argument not an integer constant");
+  }
+}
+
+VALUE
+llvm_value_get_float_constant_value(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  if (ConstantFP *C = dyn_cast<ConstantFP>(v)) {
+    APFloat val = C->getValueAPF();
+    return rb_float_new(val.convertToFloat());
+  } else {
+    rb_raise(rb_eTypeError, "Argument not a float constant");
+  }
+}
+
+
+VALUE
+llvm_value_is_null(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  if (Constant *C = dyn_cast<Constant>(v))
+    return C->isNullValue() ? Qtrue : Qfalse;
+  return Qfalse;
+}
+
+VALUE
+llvm_value_is_undef(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<UndefValue>(v) ? Qtrue : Qfalse;
+}
+
 VALUE 
 llvm_type_pointer(VALUE self, VALUE rtype) {
   Type *type;
