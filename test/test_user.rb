@@ -32,17 +32,19 @@ class UserTests < Test::Unit::TestCase
 
   def test_get_operand_list
     olist = @ins[0].get_operand_list
-    puts "===> #{olist}"
+    assert_equal(2, olist.size)
   end
 
   def test_number_of_operands
-    assert(2, @ins[0].get_num_operands)  # shl instruction
-    assert(1, @ins[7].get_num_operands)  # ret instruction
+    assert_equal(2, @ins[0].get_num_operands)  # shl instruction
+    assert_equal(1, @ins[7].get_num_operands)  # ret instruction
   end
 
   # TODO: find a way for testing this function
   def test_get_operand
-    puts "#{@ins[0].get_operand(0)}" ## FIXME: add real check!
+    op0 = @ins[0].get_operand(0)
+    op1 = @ins[1].get_operand(1)
+    assert_equal("x",op0.name)
   end
 
   def test_set_operand
