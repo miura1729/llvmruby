@@ -1,4 +1,5 @@
 #define __STDC_LIMIT_MACROS
+#define __STDC_CONSTANT_MACROS
 
 #include "llvm/Module.h"
 #include "llvm/DerivedTypes.h"

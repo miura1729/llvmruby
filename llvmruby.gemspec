@@ -1,7 +1,7 @@
 spec = Gem::Specification.new do |s|
     s.platform      = Gem::Platform::RUBY
     s.name          = "llvmruby"
-    s.version       = "0.0.4" # Can't require version file on Github
+    s.version       = "0.0.5" # Can't require version file on Github
     s.summary       = "Ruby bindings to LLVM"
     s.authors       = [ "Thomas Bagby", "Christian Plessl" ]
     s.email         = [ "tomatobagby@gmail.com", "christian@plesslweb.ch" ]
