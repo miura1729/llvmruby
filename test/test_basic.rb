@@ -331,7 +331,7 @@ class BasicTests < Test::Unit::TestCase
   end
   
   def test_type_to_s
-    assert_equal "i32", 2.llvm.type.to_s
+    assert_equal "i32", 2.llvm(Type::Int32Ty).type.to_s
   end
 
   def test_type_type_id

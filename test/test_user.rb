@@ -50,7 +50,7 @@ class UserTests < Test::Unit::TestCase
   def test_set_operand
     ins_before = @ins[0].inspect
     assert_match(/\%tmp3 = shl i32 \%x, 24/, ins_before)
-    @ins[0].set_operand(0,42.llvm)
+    @ins[0].set_operand(0,42.llvm(Type::Int32Ty))
     ins_after = @ins[0].inspect
     assert_match(/\%tmp3 = shl i32 42, 24/, ins_after)
   end
@@ -63,7 +63,7 @@ class UserTests < Test::Unit::TestCase
   def test_replace_uses_of_with
     ins_before = @ins[0].inspect
     assert_match(/\%tmp3 = shl i32 \%x, 24/, ins_before)
-    @ins[0].replace_uses_of_with(24.llvm,1234.llvm)
+    @ins[0].replace_uses_of_with(24.llvm(Type::Int32Ty),1234.llvm(Type::Int32Ty))
     ins_after = @ins[0].inspect
     assert_match(/\%tmp3 = shl i32 \%x, 1234/, ins_after)
   end
