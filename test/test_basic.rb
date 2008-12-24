@@ -334,7 +334,7 @@ class BasicTests < Test::Unit::TestCase
     type = Type::function(MACHINE_WORD, [])
     f2 = m.get_or_insert_function("test2", type)
     b = f2.create_block.builder
-    b.return 1.llvm
+    b.unwind
 
     type = Type::function(MACHINE_WORD, [])
     f = m.get_or_insert_function("test", type)
@@ -346,8 +346,7 @@ class BasicTests < Test::Unit::TestCase
     b.return(3.llvm)
     b.set_insert_point(nd)
     b.return(1.llvm)
-    p f
     ExecutionEngine.get(m)
-    assert_equal(0, ExecutionEngine.run_function(f))
+    m.write_bitcode("test/foo.bc")
   end
 end
