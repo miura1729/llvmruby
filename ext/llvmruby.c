@@ -48,6 +48,7 @@ VALUE llvm_module_allocate(VALUE);
 VALUE llvm_module_initialize(VALUE); 
 VALUE llvm_module_get_or_insert_function(VALUE, VALUE);
 VALUE llvm_module_get_function(VALUE, VALUE);
+VALUE llvm_module_global_constant(VALUE, VALUE, VALUE);
 VALUE llvm_module_global_variable(VALUE, VALUE, VALUE);
 VALUE llvm_module_external_function(VALUE, VALUE, VALUE);
 VALUE llvm_module_read_assembly(VALUE, VALUE);
@@ -98,12 +99,14 @@ VALUE llvm_builder_return(VALUE, VALUE);
 VALUE llvm_builder_br(VALUE, VALUE);
 VALUE llvm_builder_cond_br(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_switch(VALUE, VALUE, VALUE);
+VALUE llvm_builder_invoke(int, VALUE *, VALUE);
+VALUE llvm_builder_unwind(VALUE, VALUE, VALUE);
 
 VALUE llvm_builder_malloc(VALUE, VALUE, VALUE);
 VALUE llvm_builder_free(VALUE, VALUE);
 VALUE llvm_builder_alloca(VALUE, VALUE, VALUE);
-VALUE llvm_builder_load(VALUE, VALUE);
-VALUE llvm_builder_store(VALUE, VALUE, VALUE);
+VALUE llvm_builder_load(int, VALUE *,  VALUE);
+VALUE llvm_builder_store(int, VALUE *, VALUE);
 VALUE llvm_builder_icmp(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_fcmp(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_gep(VALUE, VALUE, VALUE);
@@ -241,6 +244,7 @@ void Init_llvmruby() {
   rb_define_method(cLLVMModule, "initialize", llvm_module_initialize, 1);
   rb_define_method(cLLVMModule, "get_or_insert_function", llvm_module_get_or_insert_function, 2);
   rb_define_method(cLLVMModule, "get_function", llvm_module_get_function, 1);
+  rb_define_method(cLLVMModule, "global_constant", llvm_module_global_constant, 2);
   rb_define_method(cLLVMModule, "global_variable", llvm_module_global_variable, 2);
   rb_define_method(cLLVMModule, "external_function", llvm_module_external_function, 2);
   rb_define_method(cLLVMModule, "write_bitcode", llvm_module_write_bitcode, 1);
@@ -288,11 +292,13 @@ void Init_llvmruby() {
   rb_define_method(cLLVMBuilder, "br", llvm_builder_br, 1);
   rb_define_method(cLLVMBuilder, "cond_br", llvm_builder_cond_br, 3);
   rb_define_method(cLLVMBuilder, "switch", llvm_builder_switch, 2);
+  rb_define_method(cLLVMBuilder, "invoke", llvm_builder_invoke, -1);
+  rb_define_method(cLLVMBuilder, "unwind", llvm_builder_unwind, 0);
   rb_define_method(cLLVMBuilder, "malloc", llvm_builder_malloc, 2);
   rb_define_method(cLLVMBuilder, "free", llvm_builder_free, 1);
   rb_define_method(cLLVMBuilder, "alloca", llvm_builder_alloca, 2);
-  rb_define_method(cLLVMBuilder, "load", llvm_builder_load, 1);
-  rb_define_method(cLLVMBuilder, "store", llvm_builder_store, 2);
+  rb_define_method(cLLVMBuilder, "load", llvm_builder_load, -1);
+  rb_define_method(cLLVMBuilder, "store", llvm_builder_store, -1);
   rb_define_method(cLLVMBuilder, "icmp", llvm_builder_icmp, 3);
   rb_define_method(cLLVMBuilder, "fcmp", llvm_builder_fcmp, 3);
 

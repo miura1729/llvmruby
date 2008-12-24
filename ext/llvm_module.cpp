@@ -3,6 +3,7 @@
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Analysis/Verifier.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/System/DynamicLibrary.h"
 #include <fstream>
 #include <sstream>
 
@@ -27,7 +28,16 @@ llvm_module_get_or_insert_function(VALUE self, VALUE name, VALUE rtype) {
 
   Module *m = LLVM_MODULE(self);
   FunctionType *type = LLVM_FUNC_TYPE(rtype);
-  Function *f = cast<Function>(m->getOrInsertFunction(StringValuePtr(name), type));
+  Constant *fn = m->getOrInsertFunction(StringValuePtr(name), type);
+
+#if defined(USE_ASSERT_CHECK)
+  if (isa<Function>(fn) == 0) {
+    rb_raise(rb_eRuntimeError, 
+	     "cast<Function>(fn) argument of incompatible type !");
+  }
+#endif
+
+  Function *f = cast<Function>(fn);
   return llvm_function_wrap(f); 
 }
 
@@ -40,11 +50,20 @@ llvm_module_get_function(VALUE self, VALUE name) {
 }
 
 VALUE
-llvm_module_global_variable(VALUE self, VALUE rtype, VALUE rinitializer) {
+llvm_module_global_constant(VALUE self, VALUE rtype, VALUE rinitializer) {
   Module *m = LLVM_MODULE(self);
   Type *type = LLVM_TYPE(rtype);
   Constant *initializer = (Constant*)DATA_PTR(rinitializer);
   GlobalVariable *gv = new GlobalVariable(type, true, GlobalValue::InternalLinkage, initializer, "", m);
+  return llvm_value_wrap(gv);
+}
+
+VALUE
+llvm_module_global_variable(VALUE self, VALUE rtype, VALUE rinitializer) {
+  Module *m = LLVM_MODULE(self);
+  Type *type = LLVM_TYPE(rtype);
+  Constant *initializer = (Constant*)DATA_PTR(rinitializer);
+  GlobalVariable *gv = new GlobalVariable(type, false, GlobalValue::InternalLinkage, initializer, "", m);
   return llvm_value_wrap(gv);
 }
 
@@ -94,6 +113,14 @@ VALUE
 llvm_execution_engine_get(VALUE klass, VALUE module) {
   CHECK_TYPE(module, cLLVMModule);
 
+#if defined(__CYGWIN__)
+
+  // Load dll Modules for ruby
+  sys::DynamicLibrary::LoadLibraryPermanently("cygwin1.dll");
+  sys::DynamicLibrary::LoadLibraryPermanently("cygruby190.dll");
+
+#endif
+
   Module *m = LLVM_MODULE(module);
   ExistingModuleProvider *MP = new ExistingModuleProvider(m);
 
@@ -139,7 +166,12 @@ VALUE
 llvm_module_read_bitcode(VALUE self, VALUE bitcode) {
   Check_Type(bitcode, T_STRING);
 
+#if defined(RSTRING_PTR)
+  MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING_PTR(bitcode),RSTRING_PTR(bitcode)+RSTRING_LEN(bitcode));  
+#else
   MemoryBuffer *buf = MemoryBuffer::getMemBufferCopy(RSTRING(bitcode)->ptr,RSTRING(bitcode)->ptr+RSTRING(bitcode)->len);
+#endif
+
   Module *module = ParseBitcodeFile(buf);
   delete buf;
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);

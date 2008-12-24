@@ -70,12 +70,20 @@ llvm_value_get_constant(VALUE self, VALUE type, VALUE v) {
 
 VALUE 
 llvm_value_get_float_constant(VALUE self, VALUE v) {
+#if defined(RFLOAT_VALUE)
+  return llvm_value_wrap(ConstantFP::get(Type::FloatTy, RFLOAT_VALUE(v)));
+#else
   return llvm_value_wrap(ConstantFP::get(Type::FloatTy, RFLOAT(v)->value));
+#endif
 }
 
 VALUE 
 llvm_value_get_double_constant(VALUE self, VALUE v) {
+#if defined(RFLOAT_VALUE)
+  return llvm_value_wrap(ConstantFP::get(Type::DoubleTy, RFLOAT_VALUE(v)));
+#else
   return llvm_value_wrap(ConstantFP::get(Type::DoubleTy, RFLOAT(v)->value));
+#endif
 }
 
 VALUE

@@ -107,6 +107,11 @@ llvm_builder_cond_br(VALUE self, VALUE rcond, VALUE rtrue_block, VALUE rfalse_bl
   BasicBlock *true_block, *false_block;
   Data_Get_Struct(rtrue_block, BasicBlock, true_block);
   Data_Get_Struct(rfalse_block, BasicBlock, false_block);
+#if defined(USE_ASSERT_CHECK)
+  if (cond->getType() != Type::Int1Ty) {
+    rb_raise(rb_eRuntimeError, "May only branch on boolean predicates!");
+  }
+#endif
 
   Value *branch_instr = builder->CreateCondBr(cond, true_block, false_block);
   return Data_Wrap_Struct(cLLVMBranchInst, NULL, NULL, branch_instr);
@@ -124,6 +129,32 @@ llvm_builder_switch(VALUE self, VALUE rv, VALUE rdefault) {
 
   Instruction *switch_instr = builder->CreateSwitch(v, deflt);
   return llvm_instruction_wrap(switch_instr);
+}
+
+VALUE
+llvm_builder_invoke(int argc, VALUE *argv, VALUE self) {
+  DATA_GET_BUILDER
+  if(argc < 3) { rb_raise(rb_eArgError, "Expected at least three argument"); }
+  int num_args = argc - 3;
+
+  Value *callee = LLVM_VAL(argv[0]);
+  BasicBlock *ndest;
+  BasicBlock *udest;
+  std::vector<Value *> vecarg(num_args);
+
+  Data_Get_Struct(argv[1], BasicBlock, ndest);
+  Data_Get_Struct(argv[2], BasicBlock, udest);
+  for (int i = 0; i < num_args; i++) {
+    vecarg[i] = LLVM_VAL(argv[i + 3]);
+  }
+  
+  return llvm_value_wrap(builder->CreateInvoke(callee, ndest, udest, vecarg.begin(), vecarg.end()));
+}
+
+VALUE
+llvm_builder_unwind(VALUE self) {
+  DATA_GET_BUILDER
+  return llvm_value_wrap(builder->CreateUnwind());
 }
 
 VALUE
@@ -159,22 +190,30 @@ llvm_builder_alloca(VALUE self, VALUE rtype, VALUE rsize) {
 }
 
 VALUE
-llvm_builder_load(VALUE self, VALUE rptr) {
+llvm_builder_load(int argc, VALUE *argv, VALUE self) {
   DATA_GET_BUILDER
-
+  VALUE rptr;
+  VALUE isVolatile;
   Value *ptr;
+
+  rb_scan_args(argc, argv, "11", &rptr, &isVolatile);
   Data_Get_Struct(rptr, Value, ptr);
-  return Data_Wrap_Struct(cLLVMLoadInst, NULL, NULL, builder->CreateLoad(ptr));
+  return Data_Wrap_Struct(cLLVMLoadInst, NULL, NULL, builder->CreateLoad(ptr, RTEST(isVolatile)));
 }
 
 VALUE
-llvm_builder_store(VALUE self, VALUE rv, VALUE rptr) {
+llvm_builder_store(int argc, VALUE *argv, VALUE self) {
   DATA_GET_BUILDER
 
   Value *v, *ptr;
+  VALUE rv;
+  VALUE rptr;
+  VALUE isVolatile;
+
+  rb_scan_args(argc, argv, "21", &rv, &rptr, &isVolatile);
   Data_Get_Struct(rv, Value, v);
   Data_Get_Struct(rptr, Value, ptr);
-  return Data_Wrap_Struct(cLLVMStoreInst, NULL, NULL, builder->CreateStore(v, ptr));
+  return Data_Wrap_Struct(cLLVMStoreInst, NULL, NULL, builder->CreateStore(v, ptr, RTEST(isVolatile)));
 }
 
 VALUE
@@ -255,8 +294,31 @@ llvm_builder_call(int argc, VALUE* argv, VALUE self) {
   Function *callee = LLVM_FUNCTION(argv[0]);
   int num_args = argc-1;
   Value** args = (Value**)alloca(num_args*sizeof(Value*));
+
+#if defined(USE_ASSERT_CHECK)
+  const FunctionType *FTy =
+    cast<FunctionType>(cast<PointerType>(callee->getType())->getElementType());
+  char message[255];
+  if (!((unsigned)num_args == FTy->getNumParams() ||
+	(FTy->isVarArg() && (unsigned) num_args > FTy->getNumParams()))) {
+    snprintf(message, 255, 
+	     "Calling a function with bad signature number of argument %d expect %d", 
+	     num_args, FTy->getNumParams());
+    rb_raise(rb_eRuntimeError, message);
+  }
+#endif
+
   for(int i = 0; i < num_args; ++i) {
     args[i] = LLVM_VAL(argv[i+1]); 
+
+#if defined(USE_ASSERT_CHECK)
+    if (FTy->getParamType(i) != args[i]->getType()) {
+      snprintf(message, 255, 
+	       "Calling a function with a bad signature in %d argument", 
+	       i);
+      rb_raise(rb_eRuntimeError, message);
+    }
+#endif
   }
   return llvm_value_wrap(builder->CreateCall(callee, args, args+num_args));
 }
