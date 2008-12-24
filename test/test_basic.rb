@@ -264,6 +264,17 @@ class BasicTests < Test::Unit::TestCase
     assert_kind_of(Value, struct_const)
 
     m = LLVM::Module.new('globals')
+    gv = m.global_constant(struct_type, struct_const)
+    assert_kind_of(Value, gv)
+  end
+
+  def test_struct_variable
+    int_t = Type::Int32Ty
+    struct_type = Type.struct([int_t, int_t, int_t])
+    struct_const = Value.get_struct_constant(struct_type, 2.llvm(int_t), 3.llvm(int_t), 5.llvm(int_t))
+    assert_kind_of(Value, struct_const)
+
+    m = LLVM::Module.new('globals')
     gv = m.global_variable(struct_type, struct_const)
     assert_kind_of(Value, gv)
   end
@@ -330,14 +341,14 @@ class BasicTests < Test::Unit::TestCase
   end
 
   def test_invoke_unwind
-    m = LLVM::Module.new("test_module")
+    m = LLVM::Module.new("unwind_test_module")
     type = Type::function(MACHINE_WORD, [])
-    f2 = m.get_or_insert_function("test2", type)
+    f2 = m.get_or_insert_function("unwind_test2", type)
     b = f2.create_block.builder
     b.unwind
 
     type = Type::function(MACHINE_WORD, [])
-    f = m.get_or_insert_function("test", type)
+    f = m.get_or_insert_function("unwind_test", type)
     b = f.create_block.builder
     nd = f.create_block
     ud = f.create_block
