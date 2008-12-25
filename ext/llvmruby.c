@@ -2,6 +2,8 @@
 
 VALUE cLLVMRuby = Qnil;
 VALUE cLLVMValue = Qnil;
+VALUE cLLVMUser = Qnil;
+VALUE cLLVMUse = Qnil;
 VALUE cLLVMModule = Qnil;
 VALUE cLLVMFunction = Qnil;
 VALUE cLLVMBasicBlock = Qnil;
@@ -37,6 +39,8 @@ VALUE llvm_type_array(VALUE, VALUE, VALUE);
 VALUE llvm_type_vector(VALUE, VALUE, VALUE);
 VALUE llvm_type_function2(VALUE, VALUE);
 VALUE llvm_type_function(VALUE, VALUE, VALUE);
+VALUE llvm_type_to_s(VALUE);
+VALUE llvm_type_type_id(VALUE);
 
 void init_instructions();
 
@@ -108,7 +112,6 @@ VALUE llvm_builder_fcmp(VALUE, VALUE, VALUE, VALUE);
 VALUE llvm_builder_gep(VALUE, VALUE, VALUE);
 VALUE llvm_builder_struct_gep(VALUE, VALUE, VALUE);
 VALUE llvm_builder_cast(VALUE, VALUE, VALUE, VALUE);
-VALUE llvm_builder_int_to_ptr(VALUE, VALUE, VALUE);
 VALUE llvm_builder_int_cast(VALUE, VALUE, VALUE);
 VALUE llvm_builder_call(int, VALUE*, VALUE);
 VALUE llvm_builder_insert_element(VALUE, VALUE, VALUE, VALUE);
@@ -123,9 +126,25 @@ VALUE llvm_value_get_immediate_constant(VALUE);
 VALUE llvm_value_get_struct_constant(int, VALUE*, VALUE);
 VALUE llvm_value_name(VALUE);
 VALUE llvm_value_set_name(VALUE, VALUE);
+VALUE llvm_value_type(VALUE);
 VALUE llvm_value_num_uses(VALUE);
 VALUE llvm_value_used_in_basic_block(VALUE, VALUE);
 VALUE llvm_value_replace_all_uses_with(VALUE, VALUE);
+
+VALUE llvm_value_is_constant(VALUE self);
+VALUE llvm_value_is_int_constant(VALUE self);
+VALUE llvm_value_is_float_constant(VALUE self);
+VALUE llvm_value_get_int_constant_value(VALUE self);
+VALUE llvm_value_get_float_constant_value(VALUE self);
+VALUE llvm_value_is_null(VALUE self);
+VALUE llvm_value_is_undef(VALUE self);
+
+VALUE llvm_user_get_operand_list(VALUE);
+VALUE llvm_user_get_num_operands(VALUE);
+VALUE llvm_user_get_operand(VALUE, VALUE);
+VALUE llvm_user_set_operand(VALUE, VALUE, VALUE);
+VALUE llvm_user_drop_all_references(VALUE);
+VALUE llvm_user_replace_uses_of_with(VALUE, VALUE, VALUE);
 
 VALUE llvm_phi_add_incoming(VALUE, VALUE, VALUE);
 
@@ -147,12 +166,14 @@ void Init_llvmruby() {
   cLLVMFunctionType = rb_define_class_under(cLLVMRuby, "FunctionType", cLLVMType);
 
   cLLVMValue = rb_define_class_under(cLLVMRuby, "Value", rb_cObject);
+  cLLVMUser = rb_define_class_under(cLLVMRuby, "User", cLLVMValue);
+  cLLVMUse = rb_define_class_under(cLLVMRuby, "Use", rb_cObject);
   cLLVMModule = rb_define_class_under(cLLVMRuby, "Module", rb_cObject);
   cLLVMFunction = rb_define_class_under(cLLVMRuby, "Function", rb_cObject);
   cLLVMBasicBlock = rb_define_class_under(cLLVMRuby, "BasicBlock", cLLVMValue);   
   cLLVMBuilder = rb_define_class_under(cLLVMRuby, "Builder", rb_cObject);
 
-  cLLVMInstruction = rb_define_class_under(cLLVMRuby, "Instruction", cLLVMValue);
+  cLLVMInstruction = rb_define_class_under(cLLVMRuby, "Instruction", cLLVMUser);
   cLLVMUnaryInstruction = rb_define_class_under(cLLVMRuby, "UnaryInstruction", cLLVMInstruction);
   cLLVMBinaryOperator = rb_define_class_under(cLLVMRuby, "BinaryOperator", cLLVMInstruction);
   cLLVMTerminatorInst = rb_define_class_under(cLLVMRuby, "TerminatorInst", cLLVMInstruction);
@@ -183,6 +204,8 @@ void Init_llvmruby() {
   rb_define_module_function(cLLVMType, "array", llvm_type_array, 2);
   rb_define_module_function(cLLVMType, "vector", llvm_type_vector, 2);
   rb_define_module_function(cLLVMType, "function", llvm_type_function, -1);
+  rb_define_method(cLLVMType, "to_s", llvm_type_to_s, 0);
+  rb_define_method(cLLVMType, "type_id", llvm_type_type_id, 0);
 
   rb_define_module_function(cLLVMValue, "get_constant", llvm_value_get_constant, 2);
   rb_define_module_function(cLLVMValue, "get_float_constant", llvm_value_get_float_constant, 1);
@@ -191,9 +214,26 @@ void Init_llvmruby() {
   rb_define_module_function(cLLVMValue, "get_struct_constant", llvm_value_get_struct_constant, -1);
   rb_define_method(cLLVMValue, "name", llvm_value_name, 0);
   rb_define_method(cLLVMValue, "name=", llvm_value_set_name, 1);
+  rb_define_method(cLLVMValue, "type", llvm_value_type, 0);
   rb_define_method(cLLVMValue, "num_uses", llvm_value_num_uses, 0);
   rb_define_method(cLLVMValue, "used_in_basic_block?", llvm_value_used_in_basic_block, 1);
   rb_define_method(cLLVMValue, "replace_all_uses_with", llvm_value_replace_all_uses_with, 1);
+
+  rb_define_method(cLLVMValue, "is_constant", llvm_value_is_constant, 0);
+  rb_define_method(cLLVMValue, "is_int_constant", llvm_value_is_int_constant, 0);
+  rb_define_method(cLLVMValue, "is_float_constant", llvm_value_is_float_constant, 0);
+  rb_define_method(cLLVMValue, "get_int_constant_value", llvm_value_get_int_constant_value, 0);
+  rb_define_method(cLLVMValue, "get_float_constant_value", llvm_value_get_float_constant_value, 0);
+  rb_define_method(cLLVMValue, "is_null", llvm_value_is_null, 0);
+  rb_define_method(cLLVMValue, "is_undef", llvm_value_is_undef, 0);
+
+  rb_define_method(cLLVMUser, "get_operand_list", llvm_user_get_operand_list, 0);
+  rb_define_method(cLLVMUser, "get_num_operands", llvm_user_get_num_operands, 0);
+  rb_define_method(cLLVMUser, "get_operand", llvm_user_get_operand, 1);
+  rb_define_method(cLLVMUser, "set_operand", llvm_user_set_operand, 2);
+  rb_define_method(cLLVMUser, "drop_all_references", llvm_user_drop_all_references, 0);
+  rb_define_method(cLLVMUser, "replace_uses_of_with", llvm_user_replace_uses_of_with, 2);
+
 
   init_instructions();
 
@@ -264,7 +304,6 @@ void Init_llvmruby() {
   rb_define_method(cLLVMBuilder, "gep", llvm_builder_gep, 2);
   rb_define_method(cLLVMBuilder, "struct_gep", llvm_builder_struct_gep, 2);
   rb_define_method(cLLVMBuilder, "cast", llvm_builder_cast, 3);
-  rb_define_method(cLLVMBuilder, "int_to_ptr", llvm_builder_int_to_ptr, 2);
   rb_define_method(cLLVMBuilder, "int_cast", llvm_builder_int_cast, 3);
   rb_define_method(cLLVMBuilder, "call", llvm_builder_call, -1);
   rb_define_method(cLLVMBuilder, "insert_element", llvm_builder_insert_element, 3);

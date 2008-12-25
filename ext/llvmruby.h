@@ -22,6 +22,8 @@ using namespace llvm;
 
 extern VALUE cLLVMRuby;
 extern VALUE cLLVMValue;
+extern VALUE cLLVMUser;
+extern VALUE cLLVMUse;
 extern VALUE cLLVMModule;
 extern VALUE cLLVMFunction;
 extern VALUE cLLVMBasicBlock;
@@ -46,6 +48,8 @@ extern VALUE cLLVMPhi;
 extern VALUE cLLVMPassManager;
 
 #define LLVM_VAL(obj) ((Value*)DATA_PTR(obj))
+#define LLVM_USER(obj) ((User*)DATA_PTR(obj))
+#define LLVM_USE(obj) ((Use*)DATA_PTR(obj))
 #define LLVM_TYPE(obj) ((Type*)DATA_PTR(obj))
 #define LLVM_FUNC_TYPE(obj) ((FunctionType*)DATA_PTR(obj))
 #define LLVM_MODULE(obj) ((Module*)DATA_PTR(obj))
@@ -64,6 +68,8 @@ extern VALUE cLLVMPassManager;
 
 extern "C" {
 VALUE llvm_value_wrap(Value*);
+VALUE llvm_user_wrap(User*);
+VALUE llvm_use_wrap(Use*);
 VALUE llvm_function_wrap(Function*);
 VALUE llvm_basic_block_wrap(BasicBlock*);
 VALUE llvm_function_create_block(VALUE);

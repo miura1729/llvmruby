@@ -28,6 +28,14 @@ llvm_value_set_name(VALUE self, VALUE rname) {
   return rname; 
 }
 
+VALUE
+llvm_value_type(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  const Type *t = v->getType();  
+  return Data_Wrap_Struct(cLLVMType, NULL, NULL, (void*) t);;
+}
+
 VALUE 
 llvm_value_num_uses(VALUE self) {
   Value *v;
@@ -101,6 +109,68 @@ llvm_value_get_immediate_constant(VALUE self, VALUE v) {
   return llvm_value_wrap(ConstantInt::get(type, (long)v));
 }
 
+VALUE
+llvm_value_is_constant(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<Constant>(v) ? Qtrue : Qfalse;
+}
+
+VALUE
+llvm_value_is_int_constant(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<ConstantInt>(v) ? Qtrue : Qfalse;
+}
+
+VALUE
+llvm_value_is_float_constant(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<ConstantFP>(v) ? Qtrue : Qfalse;
+}
+
+VALUE
+llvm_value_get_int_constant_value(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  if (ConstantInt *C = dyn_cast<ConstantInt>(v)) {
+    APInt val = C->getValue();
+    return LL2NUM(val.getLimitedValue());
+  } else {
+    rb_raise(rb_eTypeError, "Argument not an integer constant");
+  }
+}
+
+VALUE
+llvm_value_get_float_constant_value(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  if (ConstantFP *C = dyn_cast<ConstantFP>(v)) {
+    APFloat val = C->getValueAPF();
+    return rb_float_new(val.convertToFloat());
+  } else {
+    rb_raise(rb_eTypeError, "Argument not a float constant");
+  }
+}
+
+
+VALUE
+llvm_value_is_null(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  if (Constant *C = dyn_cast<Constant>(v))
+    return C->isNullValue() ? Qtrue : Qfalse;
+  return Qfalse;
+}
+
+VALUE
+llvm_value_is_undef(VALUE self) {
+  Value *v;
+  Data_Get_Struct(self, Value, v);
+  return isa<UndefValue>(v) ? Qtrue : Qfalse;
+}
+
 VALUE 
 llvm_type_pointer(VALUE self, VALUE rtype) {
   Type *type;
@@ -153,6 +223,20 @@ llvm_type_function(int argc, VALUE *argv, VALUE self) {
   const Type *ret_type = LLVM_TYPE(rret_type);
   FunctionType *ftype = FunctionType::get(ret_type, arg_types, RTEST(var_args));
   return Data_Wrap_Struct(cLLVMFunctionType, NULL, NULL, ftype);
+}
+
+VALUE 
+llvm_type_to_s(VALUE self) {
+  Type *type;
+  Data_Get_Struct(self, Type, type);
+  return rb_str_new2(type->getDescription().c_str());
+}
+
+VALUE 
+llvm_type_type_id(VALUE self) {
+  Type *type;
+  Data_Get_Struct(self, Type, type);
+  return INT2FIX((int) type->getTypeID());
 }
 
 void init_types() {

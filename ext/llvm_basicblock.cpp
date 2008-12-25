@@ -268,19 +268,6 @@ llvm_builder_cast(VALUE self, VALUE rop, VALUE rv, VALUE rdest_ty) {
    return llvm_value_wrap(builder->CreateCast(op, v, dest_ty));
 }
 
-VALUE
-llvm_builder_int_to_ptr(VALUE self, VALUE ri, VALUE rtype) {
-  DATA_GET_BUILDER
-
-  Value *i;
-  Data_Get_Struct(ri, Value, i);
- 
-  const Type* type; 
-  Data_Get_Struct(rtype, Type, type);
-
-  return llvm_value_wrap(builder->CreateIntToPtr(i, type));
-}
-
 VALUE llvm_builder_int_cast(VALUE self, VALUE i, VALUE type, VALUE sign) {
   DATA_GET_BUILDER
   bool isSigned = (sign != Qnil && sign != Qfalse);
