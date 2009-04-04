@@ -156,7 +156,7 @@ llvm_module_read_assembly(VALUE self, VALUE assembly) {
   Module *module = ParseAssemblyString(
     StringValuePtr(assembly),
     LLVM_MODULE(self),
-    &e
+    e
   );
   //TODO How do we handle errors?
   return Data_Wrap_Struct(cLLVMModule, NULL, NULL, module);

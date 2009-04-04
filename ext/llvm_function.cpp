@@ -45,4 +45,11 @@ llvm_function_get_basic_block_list(VALUE self) {
   return bb_array;
 }
 
+VALUE
+llvm_function_set_gc(VALUE self, VALUE str) {
+  Function *f = LLVM_FUNCTION(self);
+  f->setGC(StringValuePtr(str));
+  return self;
+}
+
 }

@@ -369,4 +369,25 @@ class BasicTests < Test::Unit::TestCase
     ExecutionEngine.get(m)
     m.write_bitcode("test/foo.bc")
   end
+
+  include RubyInternals
+  def test_setgc
+    m = LLVM::Module.new('test_gc')
+    type = Type::function(MACHINE_WORD, [])
+    f = m.get_or_insert_function("gcfunc", type)
+    f.set_gc("shadow-stack")
+
+    type = Type::function(Type::VoidTy, [Type.pointer(P_CHAR), P_CHAR])
+    gcroot = m.get_or_insert_function("llvm.gcroot", type)
+
+    b = f.create_block.builder
+    aa = b.alloca(P_CHAR, 1)
+#    aap = b.bit_cast(aa, Type.pointer(P_CHAR))
+    mp = b.int_to_ptr(3.llvm, P_CHAR)
+    b.call(gcroot, aa, mp)
+    b.return(0.llvm)
+    ExecutionEngine.get(m)
+    m.write_bitcode("test/gc.bc")
+#    assert_equal(5, result)
+  end
 end
